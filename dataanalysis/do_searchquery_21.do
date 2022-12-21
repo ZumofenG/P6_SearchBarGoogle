@@ -1,4 +1,4 @@
-* Article: Google search queries: Exploratory analysis
+* Article: Search Bar Google Political Information
 * Author: Zumofen G.
 clear all
 cd "/Users/zumofeng/OneDrive/011_PhD/8_Projects/P6_Search Bar Google/Daten/data_analysis"
@@ -13,7 +13,7 @@ use trends_votation, replace
 twoway (line abstimmung Semaine, lcolor(black) lpattern(solid)) (line votation Semaine), ytitle(Salience) ytitle(, color(black)) xtitle(Weeks) xtitle(, color(black)) xlabel(#52, labels labsize(vsmall) angle(vertical)) subtitle(Google trends in Switzerland from 11/22/2015 to 11/08/2020) legend(order(1 "Search query 'abstimmung' (German)" 2 "Search query 'votation' (French)") rows(2)) xlabel(#20) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 use trends_rffa_2019, replace
 twoway (line newsp semaine, lcolor(black) lpattern(solid)) (line staf semaine) (line rffa semaine), ytitle(Salience) ytitle(, color(black)) xtitle(Weeks) xtitle(, color(black)) xlabel(#52, labels labsize(vsmall) angle(vertical)) subtitle(Referendum vote on fiscal policy '19 May 2019') legend(order(1 "Newspaper articles on fiscal policy" 2 "Search query 'STAF' (German)" 3 "Search query 'RFFA' (French)") rows(3)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
-* do for 2017 Energy act
+
 
 *********************************************************
 * Project 1 - Energy Referendum - 2017
@@ -386,13 +386,16 @@ replace search_tri = 2 if search_c==2 | search_c==3 | search_c==4
 replace search_tri = 3 if search_c==5
 
 * 7.2 RQ2: which individual characteristics drive different search queries?
-logit search_bin i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc issue_agenda att_certainty i.operation, robust
+logit search_bin i.sex agecat revenu educ i.language pol_interest pol_knowl party_ident trust_fc opinion, robust
 estimate store search_bin
+estat classification
+lroc
 
-coefplot (search_bin, label(Selective query) m(O) mcolor(black) mfcolor(white) msize(small)), drop(_cons) eform xline(1) keep(1.sex 1.language agecat revenu educ party_ident pol_interest pol_knowl trust_fc issue_agenda att_certainty i.operation) levels (95) ylabel(, labsize(small)) xtitle (Odds ratio) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white)) grid( between glcolor(black) glpattern(dot))
+coefplot (search_bin, label(Selective query) m(O) mcolor(black) mfcolor(white) msize(small)), drop(_cons) eform xline(1) keep(1.sex 1.language agecat revenu educ party_ident pol_interest pol_knowl trust_fc opinion) levels (95) ylabel(, labsize(small)) xtitle (Odds ratio) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white)) grid( between glcolor(black) glpattern(dot))
 
 
-mlogit search_c i.sex agecat revenu educ pol_interest pol_knowl trust_fc i.party_ident opinion  i.operation if search_c!=0, robust b(1)
+mlogit search_c i.sex agecat revenu educ pol_interest pol_knowl trust_fc i.party_ident opinion i.operation if search_c!=0, robust b(1)
+mlogitgof
 
 
 * 7.3 RQ3: To what extent, do different search queries induce differnt selection strategy when facing a SERP?
@@ -451,17 +454,21 @@ gen ranking_3=0 if source==12|source==15
 replace ranking_3=1 if source==3|source==4
 replace ranking_3=2 if source==6|source==7|source==8|source==9|source==10|source==11
 
+gen ranking_4= 0 if source==12|source==15
+replace ranking_4=1 if source==3 |source==4 | source==6
+replace ranking_4=2 if source==7|source==8|source==9|source==10|source==11
+
 * Source result selection (binary variable)
 destring selectivesearch, replace
 replace selectivesearch=0 if selectivesearch==.
 
 logit selectivesearch i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking, robust
 margins ranking, over(search_bin)
-marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle) lcolor(%0)) plot2opts(mcolor(black) msymbol(square) lcolor(%0)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 logit selectivesearch i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking_3, robust
 margins ranking_3, over(search_bin)
-marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle) lcolor(%0)) plot2opts(mcolor(black) msymbol(square) lcolor(%0)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 
 ******************************************************************************************************
@@ -534,9 +541,7 @@ replace se_sub_c3 = 0 if se_sub_c3==.
 replace se_sub_c4 = 0 if se_sub_c4==.
 generate se_sub_c = (se_sub_c1+se_sub_c2+se_sub_c3+se_sub_c4)/4
 
-* 3. Measure Krippendorff intercoder reliability alpha
-kappaetc search_c1 search_c2 search_c3 search_c4
-* Interagreement = 0.81
+
 
 * 4. Combine independent coders measurement into a nominal measurement
 generate search_c = 0 if unclassified_c>0.5
@@ -568,142 +573,7 @@ merge 1:1 qsid using staf_19_coded2
 * drop observations who did not use the mock Google search bar
 drop if _merge==1
 
-* N= 1022
-
-* 6. Data preparation
-* 6.1 Sociodemographic characteristics
-generate language=0 if userlanguage=="DE"
-replace language=1 if userlanguage=="FR"
-label var language "Language"
-* Language: 0=DE, 1=FR (nominal)"
-tab language
-
-label var canton "Canton (nominal)"
-
-destring age, replace
-generate agecat=1 if age>=1994
-replace agecat=2 if age>=1984 & age<1994
-replace agecat=3 if age>=1974 & age<1984
-replace agecat=4 if age>=1964 & age<1974
-replace agecat=5 if age>=1954 & age<1964
-replace agecat=6 if age>=1944 & age<1954
-replace agecat=7 if age<1944
-label var agecat "Age category*
-* Age (ordinal)"
-tab agecat
-
-label var educ "Education"
-* Education level (ordinal)
-tab educ 
-sum educ
-
-label var revenu "Income"
-* Income (ordinal)
-tab revenu
-
-replace sex=0 if sex==2
-replace sex=. if sex==3
-label var sex "Sex"
-* Sex: 0=men, 1=women (binary)
-tab sex
-
-* 6.2 Political related attributes
-generate pol_interest=4 if polint==1
-replace pol_interest=3 if polint==2
-replace pol_interest=2 if polint==3
-replace pol_interest=1 if polint==4
-replace pol_interest=. if polint==5
-label var pol_interest "Political interest"
-* Political interest (ordinal)
-sum pol_interest
-
-rename trust_br trust_fc
-label var trust_fc "Trust government"
-* Trust Government (ordinal)
-sum trust_fc
-
-destring party_prox, replace
-generate party_ident=1 if party_prox==3
-replace party_ident=2 if party_prox==2
-replace party_ident=3 if party_prox==1
-replace party_ident=. if party_prox==9
-label var party_ident "Party attachment"
-* How close to a party (ordinal)"
-tab party_ident
-
-destring knowl1, replace
-destring knowl2, replace
-destring knowl3, replace
-destring knowl4, replace
-generate pol_knowl1 = 1 if knowl1==3
-replace pol_knowl1 = 0 if pol_knowl1==.
-generate pol_knowl2 = 1 if knowl2==1
-replace pol_knowl2 = 0 if pol_knowl2==.
-generate pol_knowl3 = 1 if knowl3==1
-replace pol_knowl3 = 0 if pol_knowl3==.
-generate pol_knowl4 = 1 if knowl4==2
-replace pol_knowl4 = 0 if pol_knowl4==.
-generate pol_knowl= pol_knowl1+pol_knowl2+pol_knowl3+pol_knowl4
-label variable pol_knowl "Political knowledge"
-sum pol_knowl
-
-replace entsch1w1=. if entsch1w1==9
-replace entsch2w1=. if entsch2w1==9
-generate opinion=entsch1w1
-replace opinion=entsch2w1 if entsch1w1==.
-label define status 0 "Absolutely against" 1 "Slightly against" 2 "Slightly pro" 3 "Absolutely pro"
-label value opinion status
-label var opinion "Opinion 0 (no)- 3 (yes) (ordinal)"
-tab opinion
-
-* 6.3 Source of information
-rename internet source_internet
-label variable source_internet "Internet is a source"
-* Internet as a source of political information"
-sum source_internet
-
-generate source_google=1 if so_google=="1"
-replace source_google=0 if source_google==.
-
-generate operation = 1 if meta_operatingsystem == "iPhone"
-replace operation = 1 if meta_operatingsystem == "iPad"
-replace operation = 1 if meta_operatingsystem == "Android 4.4.2"
-replace operation = 1 if meta_operatingsystem == "Android 5.0.2"
-replace operation = 1 if meta_operatingsystem == "Android 5.1"
-replace operation = 1 if meta_operatingsystem == "Android 6.0"
-replace operation = 1 if meta_operatingsystem == "Android 6.0.1"
-replace operation = 1 if meta_operatingsystem == "Android 7.0"
-replace operation = 1 if meta_operatingsystem == "Android 7.1.1"
-replace operation = 1 if meta_operatingsystem == "Android 8.0.0"
-replace operation = 1 if meta_operatingsystem == "Android 8.1.0"
-replace operation = 1 if meta_operatingsystem == "Android 9"
-replace operation = 0 if operation ==.
-label variable operation "Operating system"
-tab operation
-
-* 7.0 Wordcount
-gen words = wordcount(googlesearch)
-sum words
-tab words 
-
-* 7.1 RQ1: Do individuals type different search queries to obtain political information on the same political event?
-tab search_c
-graph hbar, over(search_c, relabel(1"Unclassified" 2"Generic" 3"Political actors" 4"Confirmation bias" 5"Balanced" 6"Subdimension") gap(1) label(labcolor("black") labsize(small))) bar(1, fcolor(black)) bar(2, fcolor(black)) bar(6, fcolor(black)) blabel(bar, format(%5.4g)) ytitle(Type of search query in %) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
-
-* 7.2 RQ2: which individual characteristics drive different search queries?
-logit search_bin i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.opinion i.operation, robust
-estimate store search_bin
-
-coefplot (search_bin, label(Selective query) m(O) mcolor(black) mfcolor(white) msize(small)), drop(_cons) eform xline(1) keep(1.sex 1.language agecat revenu educ party_ident pol_interest pol_knowl trust_fc i.operation) levels (95) ylabel(, labsize(small)) xtitle (Odds ratio) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white)) grid( between glcolor(black) glpattern(dot))
-* No factors. No influences.
-
-mlogit search_c i.sex agecat revenu educ pol_interest pol_knowl trust_fc i.party_ident opinion source_internet i.operation if search_c!=0, robust b(1)
-
-
-
-
-* 7.3 RQ3: To what extent, do different search queries induce differnt selection strategy when facing a SERP?
-* 7.3.1: Define the 6 groups
+* Define the 6 groups
 destring googlerandom_1, replace
 replace googlerandom_1=0 if googlerandom_1==.
 destring googlerandom_2, replace
@@ -842,7 +712,150 @@ label define group 1 "random" 2 "top51" 3 "top52" 4 "top2gov" 5 "top2ads" 6 "new
 generate database = 1 if group==1 | group==2 | group==3 | group==4 | group==5
 replace database = 0 if database!=1
 
-* 7.3.2 Analysis
+* N= 820
+
+* 3. Measure Krippendorff intercoder reliability alpha
+kappaetc search_c1 search_c2 search_c3 search_c4 if database==1
+* Interagreement = 0.85
+
+* 6. Data preparation
+* 6.1 Sociodemographic characteristics
+generate language=0 if userlanguage=="DE"
+replace language=1 if userlanguage=="FR"
+label var language "Language"
+* Language: 0=DE, 1=FR (nominal)"
+tab language if database==1
+
+label var canton "Canton (nominal)"
+
+destring age, replace
+generate agecat=1 if age>=1994
+replace agecat=2 if age>=1984 & age<1994
+replace agecat=3 if age>=1974 & age<1984
+replace agecat=4 if age>=1964 & age<1974
+replace agecat=5 if age>=1954 & age<1964
+replace agecat=6 if age>=1944 & age<1954
+replace agecat=7 if age<1944
+label var agecat "Age category*
+* Age (ordinal)"
+tab agecat if database==1
+
+label var educ "Education"
+* Education level (ordinal)
+tab educ if database==1
+sum educ if database==1
+
+label var revenu "Income"
+* Income (ordinal)
+tab revenu if database==1
+
+replace sex=0 if sex==2
+replace sex=. if sex==3
+label var sex "Sex"
+* Sex: 0=men, 1=women (binary)
+tab sex if database==1
+
+* 6.2 Political related attributes
+generate pol_interest=4 if polint==1
+replace pol_interest=3 if polint==2
+replace pol_interest=2 if polint==3
+replace pol_interest=1 if polint==4
+replace pol_interest=. if polint==5
+label var pol_interest "Political interest"
+* Political interest (ordinal)
+sum pol_interest if database==1
+
+rename trust_br trust_fc
+label var trust_fc "Trust government"
+* Trust Government (ordinal)
+sum trust_fc if database==1
+
+destring party_prox, replace
+generate party_ident=1 if party_prox==3
+replace party_ident=2 if party_prox==2
+replace party_ident=3 if party_prox==1
+replace party_ident=. if party_prox==9
+label var party_ident "Party attachment"
+* How close to a party (ordinal)"
+tab party_ident if database==1
+
+* Political knowledge
+destring knowl1, replace
+destring knowl2, replace
+destring knowl3, replace
+destring knowl4, replace
+generate pol_knowl1 = 1 if knowl1==3
+replace pol_knowl1 = 0 if pol_knowl1==.
+generate pol_knowl2 = 1 if knowl2==1
+replace pol_knowl2 = 0 if pol_knowl2==.
+generate pol_knowl3 = 1 if knowl3==1
+replace pol_knowl3 = 0 if pol_knowl3==.
+generate pol_knowl4 = 1 if knowl4==2
+replace pol_knowl4 = 0 if pol_knowl4==.
+generate pol_knowl= pol_knowl1+pol_knowl2+pol_knowl3+pol_knowl4
+label variable pol_knowl "Political knowledge"
+sum pol_knowl if database==1
+
+replace entsch1w1=. if entsch1w1==9
+replace entsch2w1=. if entsch2w1==9
+generate opinion=entsch1w1
+replace opinion=entsch2w1 if entsch1w1==.
+label define status 0 "Absolutely against" 1 "Slightly against" 2 "Slightly pro" 3 "Absolutely pro"
+label value opinion status
+label var opinion "Opinion 0 (no)- 3 (yes) (ordinal)"
+tab opinion if database==1
+
+* 6.3 Source of information
+rename internet source_internet
+label variable source_internet "Internet is a source"
+* Internet as a source of political information"
+sum source_internet if database==1
+
+generate source_google=1 if so_google=="1"
+replace source_google=0 if source_google==.
+
+generate operation = 1 if meta_operatingsystem == "iPhone"
+replace operation = 1 if meta_operatingsystem == "iPad"
+replace operation = 1 if meta_operatingsystem == "Android 4.4.2"
+replace operation = 1 if meta_operatingsystem == "Android 5.0.2"
+replace operation = 1 if meta_operatingsystem == "Android 5.1"
+replace operation = 1 if meta_operatingsystem == "Android 6.0"
+replace operation = 1 if meta_operatingsystem == "Android 6.0.1"
+replace operation = 1 if meta_operatingsystem == "Android 7.0"
+replace operation = 1 if meta_operatingsystem == "Android 7.1.1"
+replace operation = 1 if meta_operatingsystem == "Android 8.0.0"
+replace operation = 1 if meta_operatingsystem == "Android 8.1.0"
+replace operation = 1 if meta_operatingsystem == "Android 9"
+replace operation = 0 if operation ==.
+label variable operation "Operating system"
+tab operation if database==1
+
+* 7.0 Wordcount
+gen words = wordcount(googlesearch)
+sum words if database==1
+tab words if database==1
+
+* 7.1 RQ1: Do individuals type different search queries to obtain political information on the same political event?
+tab search_c if database==1
+graph hbar if database==1, over(search_c, relabel(1"Unclassified" 2"Generic" 3"Political actors" 4"Confirmation bias" 5"Balanced" 6"Subdimension") gap(1) label(labcolor("black") labsize(small))) bar(1, fcolor(black)) bar(2, fcolor(black)) bar(6, fcolor(black)) blabel(bar, format(%5.4g)) ytitle(Type of search query in %) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+
+* 7.2 RQ2: which individual characteristics drive different search queries?
+logit search_bin i.sex agecat revenu educ i.language pol_interest pol_knowl party_ident trust_fc opinion if database==1, robust 
+estimate store search_bin
+estat classification
+lroc
+
+coefplot (search_bin, label(Selective query) m(O) mcolor(black) mfcolor(white) msize(small)), drop(_cons) eform xline(1) keep(1.sex 1.language agecat revenu educ party_ident pol_interest pol_knowl trust_fc opinion) levels (95) ylabel(, labsize(small)) xtitle (Odds ratio) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white)) grid( between glcolor(black) glpattern(dot))
+* No factors. No influences.
+
+
+mlogit search_c i.sex agecat revenu educ pol_interest pol_knowl trust_fc i.party_ident opinion source_internet i.operation if search_c!=0 & database==1, robust b(1)
+mlogitgof
+
+
+* 7.3 RQ3: To what extent, do different search queries induce differnt selection strategy when facing a SERP?
+
+* 7.3.1 Analysis
 generate result1 = googlerandom_1+ googletop51_1+ googletop52_1+ googletop2gov_1+ googletop2ads_1+ googleune_1
 label variable result1 "Choice of result 1"
 
@@ -951,16 +964,16 @@ label define ranking_cat 0"Random" 1"Top 5" 2"Least 5"
 label define ranking_cat2 0"Random" 1"Top 2" 2"Least 8" 
 
 * 7.3.5 Logit regression
-logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking_cat2, robust
+logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking_cat2 if database==1, robust
 margins ranking_cat2, over(search_bin)
-marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle) lcolor(%0)) plot2opts(mcolor(black) msymbol(square) lcolor(%0)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking_cat, robust
+logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking_cat if database==1, robust
 margins ranking_cat, over(search_bin)
-marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle) lcolor(%0)) plot2opts(mcolor(black) msymbol(square) lcolor(%0)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking, robust
+logit result i.sex educ agecat revenu i.language pol_interest pol_knowl i.party_ident trust_fc i.operation i.search_bin##i.ranking if database==1, robust
 margins ranking, over(search_bin)
-marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+marginsplot,  level(95) plot1opts(mcolor(black) msymbol(circle) lcolor(%0)) plot2opts(mcolor(black) msymbol(square) lcolor(%0)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) xtitle(Ranking on Google's page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 
